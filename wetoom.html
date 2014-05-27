@@ -26,12 +26,443 @@
 	</div>
 <div id="md" style="display: none;">
 <!-- markdown -->
+//
+//  ViewController.m
+//  AnimationBuilder
+//
+//  Created by WeeTom on 14-5-23.
+//  Copyright (c) 2014年 ___migndao___. All rights reserved.
+//
 
+#import "ViewController.h"
+#import "CustomScrollView.h"
+
+#define VisiblePosition CGPointMake(242.0f,150.0f)
+#define VisibleReadyPosition CGPointMake(242.0f,60)
+
+#define HiddenPosition CGPointMake(275.0f,60.0f)
+
+@interface ViewController ()
+@property (nonatomic, assign) CGRect fromRect;
+@property (assign, nonatomic) CGRect toRect;
+@property (assign, nonatomic) BOOL isOpen;
+@property (nonatomic, strong) UIImageView *popView;
+@property (nonatomic) CustomScrollView *customScrollView;
+@end
+
+@implementation ViewController
+
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        self.title = NSLocalizedString(@"POP", @"POP");
+        self.isOpen = NO;
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(togglePopup)];
+    
+    self.fromRect = CGRectMake(320-147, 64, 147, 160);
+    self.toRect = CGRectMake(320, 64, 0, 0);
+//    self.popView = [[UIImageView alloc] initWithFrame:self.toRect];
+
+    self.popView = [[UIImageView alloc] initWithFrame:self.fromRect];
+        [self.popView setBackgroundColor:[UIColor blackColor]];
+     self.popView.layer.transform = CATransform3DMakeScale(0.5, 0.5, 1);
+    self.popView.layer.position = HiddenPosition;
+    self.popView.layer.opacity = 0.0f;
+    self.popView.layer.cornerRadius = 4.0f;
+    self.popView.layer.backgroundColor = [UIColor blackColor].CGColor;
+    [self.view addSubview:self.popView];
+
+    
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(alphaOut:)];
+    self.popView.userInteractionEnabled = YES;
+    [self.view addGestureRecognizer:tap];
+    
+    self.customScrollView = [[CustomScrollView alloc] initWithFrame:self.view.bounds];
+    self.customScrollView.contentSize = CGSizeMake(self.view.bounds.size.width, 5000);
+    
+    UIView *redView = [[UIView alloc] initWithFrame:CGRectMake(20, 20, 100, 100)];
+    UIView *greenView = [[UIView alloc] initWithFrame:CGRectMake(150, 160, 150, 200)];
+    UIView *blueView = [[UIView alloc] initWithFrame:CGRectMake(40, 400, 200, 150)];
+    UIView *yellowView = [[UIView alloc] initWithFrame:CGRectMake(100, 600, 180, 150)];
+    
+    redView.backgroundColor = [UIColor colorWithRed:0.815 green:0.007 blue:0.105 alpha:1];
+    greenView.backgroundColor = [UIColor colorWithRed:0.494 green:0.827 blue:0.129 alpha:1];
+    blueView.backgroundColor = [UIColor colorWithRed:0.29 green:0.564 blue:0.886 alpha:1];
+    yellowView.backgroundColor = [UIColor colorWithRed:0.972 green:0.905 blue:0.109 alpha:1];
+    
+    [self.customScrollView addSubview:redView];
+    [self.customScrollView addSubview:greenView];
+    [self.customScrollView addSubview:blueView];
+    [self.customScrollView addSubview:yellowView];
+    
+    
+    
+    UIView *redView1 = [[UIView alloc] initWithFrame:CGRectMake(20, 500+20, 100, 100)];
+    UIView *greenView1 = [[UIView alloc] initWithFrame:CGRectMake(150, 500+160, 150, 200)];
+    UIView *blueView1 = [[UIView alloc] initWithFrame:CGRectMake(40, 500+400, 200, 150)];
+    UIView *yellowView1 = [[UIView alloc] initWithFrame:CGRectMake(100, 500+600, 180, 150)];
+    
+    redView1.backgroundColor = [UIColor purpleColor];
+    greenView1.backgroundColor = [UIColor redColor];
+    blueView1.backgroundColor = [UIColor grayColor];
+    yellowView1.backgroundColor = [UIColor blackColor];
+    
+    [self.customScrollView addSubview:redView1];
+    [self.customScrollView addSubview:greenView1];
+    [self.customScrollView addSubview:blueView1];
+    [self.customScrollView addSubview:yellowView1];
+    
+    
+    [self.view addSubview:self.customScrollView];
+    
+}
+- (void)hidePopup
+{
+    _isOpen = NO;
+    POPBasicAnimation *opacityAnimation = [POPBasicAnimation animationWithPropertyNamed:kPOPLayerOpacity];
+    opacityAnimation.fromValue = @(1);
+    opacityAnimation.toValue = @(0);
+    [_popView.layer pop_addAnimation:opacityAnimation forKey:@"opacityAnimation"];
+    
+    POPBasicAnimation *positionAnimation = [POPBasicAnimation animationWithPropertyNamed:kPOPLayerPosition];
+    positionAnimation.fromValue = [NSValue valueWithCGPoint:VisiblePosition];
+    positionAnimation.toValue = [NSValue valueWithCGPoint:HiddenPosition];
+    [_popView.layer pop_addAnimation:positionAnimation forKey:@"positionAnimation"];
+    
+    POPSpringAnimation *scaleAnimation = [POPSpringAnimation animationWithPropertyNamed:kPOPLayerScaleXY];
+    
+    scaleAnimation.fromValue  = [NSValue valueWithCGSize:CGSizeMake(1.0f, 1.0f)];
+    scaleAnimation.toValue  = [NSValue valueWithCGSize:CGSizeMake(0.5f, 0.5f)];
+    [_popView.layer pop_addAnimation:scaleAnimation forKey:@"scaleAnimation"];
+}
+
+- (void)showPopup
+{
+    _isOpen = YES;
+    
+    POPBasicAnimation *opacityAnimation = [POPBasicAnimation animationWithPropertyNamed:kPOPLayerOpacity];
+    opacityAnimation.fromValue = @(0);
+    opacityAnimation.toValue = @(1);
+    opacityAnimation.beginTime = CACurrentMediaTime() + 0.1;
+    [_popView.layer pop_addAnimation:opacityAnimation forKey:@"opacityAnimation"];
+    
+    POPBasicAnimation *positionAnimation = [POPBasicAnimation animationWithPropertyNamed:kPOPLayerPosition];
+    positionAnimation.fromValue = [NSValue valueWithCGPoint:VisibleReadyPosition];
+    positionAnimation.toValue = [NSValue valueWithCGPoint:VisiblePosition];
+    [_popView.layer pop_addAnimation:positionAnimation forKey:@"positionAnimation"];
+    
+    
+    POPSpringAnimation *scaleAnimation = [POPSpringAnimation animationWithPropertyNamed:kPOPLayerScaleXY];
+    scaleAnimation.fromValue  = [NSValue valueWithCGSize:CGSizeMake(0.5, 0.5f)];
+    scaleAnimation.toValue  = [NSValue valueWithCGSize:CGSizeMake(1.0f, 1.0f)];//@(0.0f);
+    scaleAnimation.springBounciness = 20.0f;
+    scaleAnimation.springSpeed = 20.0f;
+    [_popView.layer pop_addAnimation:scaleAnimation forKey:@"scaleAnimation"];
+}
+
+- (void)togglePopup
+{
+    if (!_isOpen)
+    {
+        [self showPopup];
+    }
+    else
+    {
+        [self hidePopup];
+    }
+}
+
+
+- (void)alphaOut:(UITapGestureRecognizer *)tap
+{
+    POPSpringAnimation *springAnimation = [POPSpringAnimation animationWithPropertyNamed:kPOPViewFrame];
+    
+    CGPoint point = [tap locationInView:self.view];
+    
+    springAnimation.toValue = [NSValue valueWithCGRect:CGRectMake(0, 0, point.x, point.y)];
+    
+    
+    //弹性值
+    springAnimation.springBounciness = 20.0;
+    //弹性速度
+    springAnimation.springSpeed = 20.0;
+    
+    [self.popView pop_addAnimation:springAnimation forKey:@"changeframe"];
+
+//    POPBasicAnimation *ba = [POPBasicAnimation animationWithPropertyNamed:kPOPViewAlpha];
+//    
+//    ba.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+//    float alpha = self.popView.alpha;
+//    if (alpha == 1.0) {
+//        ba.toValue = @(0.0);
+//    } else {
+//        ba.toValue = @(1.0);
+//    }
+//    
+//    [self.popView pop_addAnimation:ba forKey:@"alpha"];
+}
+
+- (void)popOut
+{
+    if (self.isOpen) {
+        [self popIn];
+        return;
+    }
+    self.isOpen = YES;
+    POPSpringAnimation *sa = [POPSpringAnimation animationWithPropertyNamed:kPOPViewFrame];
+    sa.fromValue = [NSValue valueWithCGRect:self.toRect];
+    sa.toValue = [NSValue valueWithCGRect:self.fromRect];
+    sa.springBounciness = 15.f;
+    sa.springSpeed = 20.f;
+    [self.popView pop_addAnimation:sa forKey:@"frameAnimation"];
+}
+
+- (void)popIn
+{
+    POPBasicAnimation *ba = [POPBasicAnimation animationWithPropertyNamed:kPOPViewFrame];
+    ba.fromValue = [NSValue valueWithCGRect:self.fromRect];
+    ba.toValue = [NSValue valueWithCGRect:self.toRect];
+    [self.popView pop_addAnimation:ba forKey:@"frameAnimation"];
+    self.isOpen = NO;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end
+
+
+https://meihua.mingdao.com/feed
 <!-- markdown end -->
 </div>
 <div class="entry" id="main">
 <!-- content -->
+<p>//
+//  ViewController.m
+//  AnimationBuilder
+//
+//  Created by WeeTom on 14-5-23.
+//  Copyright (c) 2014年 <strong><em>migndao</em></strong>. All rights reserved.
+//</p>
 
+<h1 id="importviewcontrollerh">import "ViewController.h"</h1>
+
+<h1 id="importcustomscrollviewh">import "CustomScrollView.h"</h1>
+
+<h1 id="definevisiblepositioncgpointmake2420f1500f">define VisiblePosition CGPointMake(242.0f,150.0f)</h1>
+
+<h1 id="definevisiblereadypositioncgpointmake2420f60">define VisibleReadyPosition CGPointMake(242.0f,60)</h1>
+
+<h1 id="definehiddenpositioncgpointmake2750f600f">define HiddenPosition CGPointMake(275.0f,60.0f)</h1>
+
+<p>@interface ViewController ()
+@property (nonatomic, assign) CGRect fromRect;
+@property (assign, nonatomic) CGRect toRect;
+@property (assign, nonatomic) BOOL isOpen;
+@property (nonatomic, strong) UIImageView *popView;
+@property (nonatomic) CustomScrollView *customScrollView;
+@end</p>
+
+<p>@implementation ViewController</p>
+
+<ul>
+<li><p>(id)init
+{
+self = [super init];
+if (self) {
+    self.title = NSLocalizedString(@"POP", @"POP");
+    self.isOpen = NO;
+}
+return self;
+}</p></li>
+<li><p>(void)viewDidLoad
+{
+[super viewDidLoad];
+self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(togglePopup)];</p>
+
+<p>self.fromRect = CGRectMake(320-147, 64, 147, 160);
+self.toRect = CGRectMake(320, 64, 0, 0);
+//    self.popView = [[UIImageView alloc] initWithFrame:self.toRect];</p>
+
+<p>self.popView = [[UIImageView alloc] initWithFrame:self.fromRect];
+    [self.popView setBackgroundColor:[UIColor blackColor]];
+ self.popView.layer.transform = CATransform3DMakeScale(0.5, 0.5, 1);
+self.popView.layer.position = HiddenPosition;
+self.popView.layer.opacity = 0.0f;
+self.popView.layer.cornerRadius = 4.0f;
+self.popView.layer.backgroundColor = [UIColor blackColor].CGColor;
+[self.view addSubview:self.popView];</p>
+
+<p>UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(alphaOut:)];
+self.popView.userInteractionEnabled = YES;
+[self.view addGestureRecognizer:tap];</p>
+
+<p>self.customScrollView = [[CustomScrollView alloc] initWithFrame:self.view.bounds];
+self.customScrollView.contentSize = CGSizeMake(self.view.bounds.size.width, 5000);</p>
+
+<p>UIView *redView = [[UIView alloc] initWithFrame:CGRectMake(20, 20, 100, 100)];
+UIView *greenView = [[UIView alloc] initWithFrame:CGRectMake(150, 160, 150, 200)];
+UIView *blueView = [[UIView alloc] initWithFrame:CGRectMake(40, 400, 200, 150)];
+UIView *yellowView = [[UIView alloc] initWithFrame:CGRectMake(100, 600, 180, 150)];</p>
+
+<p>redView.backgroundColor = [UIColor colorWithRed:0.815 green:0.007 blue:0.105 alpha:1];
+greenView.backgroundColor = [UIColor colorWithRed:0.494 green:0.827 blue:0.129 alpha:1];
+blueView.backgroundColor = [UIColor colorWithRed:0.29 green:0.564 blue:0.886 alpha:1];
+yellowView.backgroundColor = [UIColor colorWithRed:0.972 green:0.905 blue:0.109 alpha:1];</p>
+
+<p>[self.customScrollView addSubview:redView];
+[self.customScrollView addSubview:greenView];
+[self.customScrollView addSubview:blueView];
+[self.customScrollView addSubview:yellowView];</p>
+
+<p>UIView *redView1 = [[UIView alloc] initWithFrame:CGRectMake(20, 500+20, 100, 100)];
+UIView *greenView1 = [[UIView alloc] initWithFrame:CGRectMake(150, 500+160, 150, 200)];
+UIView *blueView1 = [[UIView alloc] initWithFrame:CGRectMake(40, 500+400, 200, 150)];
+UIView *yellowView1 = [[UIView alloc] initWithFrame:CGRectMake(100, 500+600, 180, 150)];</p>
+
+<p>redView1.backgroundColor = [UIColor purpleColor];
+greenView1.backgroundColor = [UIColor redColor];
+blueView1.backgroundColor = [UIColor grayColor];
+yellowView1.backgroundColor = [UIColor blackColor];</p>
+
+<p>[self.customScrollView addSubview:redView1];
+[self.customScrollView addSubview:greenView1];
+[self.customScrollView addSubview:blueView1];
+[self.customScrollView addSubview:yellowView1];</p>
+
+<p>[self.view addSubview:self.customScrollView];</p></li>
+</ul>
+
+<p>}
+- (void)hidePopup
+{
+    <em>isOpen = NO;
+    POPBasicAnimation *opacityAnimation = [POPBasicAnimation animationWithPropertyNamed:kPOPLayerOpacity];
+    opacityAnimation.fromValue = @(1);
+    opacityAnimation.toValue = @(0);
+    [</em>popView.layer pop_addAnimation:opacityAnimation forKey:@"opacityAnimation"];</p>
+
+<pre><code>POPBasicAnimation *positionAnimation = [POPBasicAnimation animationWithPropertyNamed:kPOPLayerPosition];
+positionAnimation.fromValue = [NSValue valueWithCGPoint:VisiblePosition];
+positionAnimation.toValue = [NSValue valueWithCGPoint:HiddenPosition];
+[_popView.layer pop_addAnimation:positionAnimation forKey:@"positionAnimation"];
+
+POPSpringAnimation *scaleAnimation = [POPSpringAnimation animationWithPropertyNamed:kPOPLayerScaleXY];
+
+scaleAnimation.fromValue  = [NSValue valueWithCGSize:CGSizeMake(1.0f, 1.0f)];
+scaleAnimation.toValue  = [NSValue valueWithCGSize:CGSizeMake(0.5f, 0.5f)];
+[_popView.layer pop_addAnimation:scaleAnimation forKey:@"scaleAnimation"];
+</code></pre>
+
+<p>}</p>
+
+<ul>
+<li><p>(void)showPopup
+{
+_isOpen = YES;</p>
+
+<p>POPBasicAnimation *opacityAnimation = [POPBasicAnimation animationWithPropertyNamed:kPOPLayerOpacity];
+opacityAnimation.fromValue = @(0);
+opacityAnimation.toValue = @(1);
+opacityAnimation.beginTime = CACurrentMediaTime() + 0.1;
+[<em>popView.layer pop</em>addAnimation:opacityAnimation forKey:@"opacityAnimation"];</p>
+
+<p>POPBasicAnimation *positionAnimation = [POPBasicAnimation animationWithPropertyNamed:kPOPLayerPosition];
+positionAnimation.fromValue = [NSValue valueWithCGPoint:VisibleReadyPosition];
+positionAnimation.toValue = [NSValue valueWithCGPoint:VisiblePosition];
+[<em>popView.layer pop</em>addAnimation:positionAnimation forKey:@"positionAnimation"];</p>
+
+<p>POPSpringAnimation *scaleAnimation = [POPSpringAnimation animationWithPropertyNamed:kPOPLayerScaleXY];
+scaleAnimation.fromValue  = [NSValue valueWithCGSize:CGSizeMake(0.5, 0.5f)];
+scaleAnimation.toValue  = [NSValue valueWithCGSize:CGSizeMake(1.0f, 1.0f)];//@(0.0f);
+scaleAnimation.springBounciness = 20.0f;
+scaleAnimation.springSpeed = 20.0f;
+[<em>popView.layer pop</em>addAnimation:scaleAnimation forKey:@"scaleAnimation"];
+}</p></li>
+<li><p>(void)togglePopup
+{
+if (!_isOpen)
+{
+    [self showPopup];
+}
+else
+{
+    [self hidePopup];
+}
+}</p></li>
+<li><p>(void)alphaOut:(UITapGestureRecognizer *)tap
+{
+POPSpringAnimation *springAnimation = [POPSpringAnimation animationWithPropertyNamed:kPOPViewFrame];</p>
+
+<p>CGPoint point = [tap locationInView:self.view];</p>
+
+<p>springAnimation.toValue = [NSValue valueWithCGRect:CGRectMake(0, 0, point.x, point.y)];</p>
+
+<p>//弹性值
+springAnimation.springBounciness = 20.0;
+//弹性速度
+springAnimation.springSpeed = 20.0;</p>
+
+<p>[self.popView pop_addAnimation:springAnimation forKey:@"changeframe"];</p></li>
+</ul>
+
+<p>//    POPBasicAnimation *ba = [POPBasicAnimation animationWithPropertyNamed:kPOPViewAlpha];
+// <br>
+//    ba.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+//    float alpha = self.popView.alpha;
+//    if (alpha == 1.0) {
+//        ba.toValue = @(0.0);
+//    } else {
+//        ba.toValue = @(1.0);
+//    }
+// <br>
+//    [self.popView pop_addAnimation:ba forKey:@"alpha"];
+}</p>
+
+<ul>
+<li><p>(void)popOut
+{
+if (self.isOpen) {
+    [self popIn];
+    return;
+}
+self.isOpen = YES;
+POPSpringAnimation *sa = [POPSpringAnimation animationWithPropertyNamed:kPOPViewFrame];
+sa.fromValue = [NSValue valueWithCGRect:self.toRect];
+sa.toValue = [NSValue valueWithCGRect:self.fromRect];
+sa.springBounciness = 15.f;
+sa.springSpeed = 20.f;
+[self.popView pop_addAnimation:sa forKey:@"frameAnimation"];
+}</p></li>
+<li><p>(void)popIn
+{
+POPBasicAnimation *ba = [POPBasicAnimation animationWithPropertyNamed:kPOPViewFrame];
+ba.fromValue = [NSValue valueWithCGRect:self.fromRect];
+ba.toValue = [NSValue valueWithCGRect:self.toRect];
+[self.popView pop_addAnimation:ba forKey:@"frameAnimation"];
+self.isOpen = NO;
+}</p></li>
+<li><p>(void)didReceiveMemoryWarning
+{
+[super didReceiveMemoryWarning];
+// Dispose of any resources that can be recreated.
+}</p></li>
+</ul>
+
+<p>@end</p>
+
+<p>https://meihua.mingdao.com/feed</p>
 <!-- content end -->
 </div>
 <br>
